@@ -1,7 +1,11 @@
-# Initial prototype verification
+# Desktop v0.2 verification
 
-- Built a Windows managed PE executable with the .NET Framework compiler.
-- Automated tests: URL validation, tree boundaries, encoded separators and control characters, HTML entities, duplicate removal, directory icon recognition, depth 0/1, partial HTTP failures, off-site redirects, scan limits, cancellation, and actual loopback HTTP transport.
-- Retrieved the current ArduPilot Plane listing over verified HTTPS using Python's OpenSSL transport and passed it through the same C# parser. Confirmed `stable` and `latest` are folders. No downloaded firmware files were executed.
-- Direct live HTTPS from the C# executable could not be verified in the local Codex sandbox: Windows Schannel returned `SEC_E_NO_CREDENTIALS`. PowerShell and curl with Schannel failed identically. TLS certificate checks have not been disabled. The Windows CI workflow includes a direct live HTTPS smoke test for independent verification.
-- GUI, file downloads, and Explorer drag-and-drop are not part of this milestone.
+- Both Windows executables rebuilt successfully.
+- 17 scanner checks passed, including actual loopback HTTP transport.
+- 24 desktop/transfer checks passed: Windows names and collisions, recursive folder resolution, empty directories, no file downloads during descriptor preparation, bounded concurrency, byte-accurate indexed streams, no overwrite, failure cleanup, and cancellation.
+- Actual Windows Shell IDropTarget integration passed: copied two files and a folder together, preserving nested content and an empty subfolder, into an isolated test folder.
+- The application's own rendering was inspected; a narrow folder pane was corrected.
+- Physical mouse dragging to the desktop was not completed during automated testing: desktop capture timed out and the user stopped computer-use testing. Native Shell drop behavior is covered by the integration test above.
+- Local Windows Schannel HTTPS is restricted in the Codex sandbox. Certificate validation remains enabled; Windows CI separately checks a live ArduPilot HTTPS listing.
+
+Known limits: no automatic retry/resume, file redirects rejected, Windows-incompatible or overly long paths fail explicitly. External drop targets control final writes and may leave partial destinations after cancellation. Temporary staging may survive a crash or an external consumer holding a stream open.

@@ -1,58 +1,51 @@
-# FetchTree
+# FetchTree v0.2
 
-FetchTree will bring an Explorer-style interface to HTTP/HTTPS directory listings: a folder tree, file selection, and concurrent downloads that preserve folder structure.
+An Explorer-style Windows desktop app for HTTP/HTTPS directory listings.
 
-**Current milestone: working scanner prototype (v0.1).** This version is a Windows console application, not yet the graphical file browser or downloader. Its scan model is separate from the console so a future desktop UI can reuse it.
+## Run
 
-## Run the Windows executable
+Extract the package and double-click **FetchTree.exe**. Requires Windows 10/11 and .NET Framework 4.8. No installation or extra packages are needed; the executable is unsigned.
 
-Requires Windows 10/11 with .NET Framework 4.8 enabled. No Python, Node, or third-party packages are needed. The prototype is unsigned.
+1. Enter a directory URL such as `https://firmware.ardupilot.org/Plane/` and click **Scan**.
+2. Double-click folders or use the folder tree. Back, Up, Refresh, and Icon/Details views provide familiar navigation.
+3. Select files and folders together using **Ctrl-click**, **Shift-click**, or **Ctrl+A**.
+4. **Drag the selection to your desktop or a File Explorer folder.** Actual contents are copied, preserving nested and empty folders.
+5. Alternatively use **Download to…**, which creates a new dated FetchTree folder inside the chosen destination to avoid overwrites.
 
-Double-click `FetchTree.exe` for guided URL and depth prompts. It saves a timestamped JSON report in your Documents folder and waits for Enter before closing.
+The queue shows file status and downloaded bytes. Choose 1–8 simultaneous downloads (default 3). Cancel stops scanning or transfers. Keep FetchTree open until the transfer finishes.
 
-Or run from PowerShell:
+## Folder transfers
+
+Depth 0 reads the root listing; opening a folder loads it on demand. Higher depths preload more levels. Transferring a folder always resolves its full subtree independently of browsing depth. An incomplete scan fails rather than silently omitting files.
+
+Folders are resolved when a drop target requests descriptors. Large selections may take time to prepare. File downloads begin when the target requests contents, not when items are selected. A target may request contents before mouse release; Explorer normally does so at the drop. The browser remains responsive during the transfer.
+
+Limits: 2,000 listing requests per selected folder, depth 100, and 10,000 total transfer entries. Browsing allows 1,000 pages and 10,000 entries per scan. Listing requests have a 20-second timeout and a 4 MB response limit. Downloads have a 60-second inactivity timeout.
+
+Windows-incompatible names, case collisions, and relative transfer paths over 220 characters are rejected. Explorer handles destination conflicts during drops. Downloads are staged under `%TEMP%\FetchTree` and cleaned after transfers; crashes or external consumers holding streams open may leave cached files. Files are never executed.
+
+## Supported sites and limitations
+
+Supports Apache/nginx-style directory links and ArduPilot folder-icon tables, including folder links without trailing slashes. Use exact URL casing (`Plane`, not `plane`). Parent, external, duplicate, query, and fragment links are excluded. Listing redirects may only normalize a trailing slash; file redirects are rejected. Enter the final directory URL.
+
+JavaScript-generated listings, authentication, automatic retries, resume, signing, and an installer are not included. Inspect the destination after a cancelled or failed drop: Explorer may have copied only part of a selection. The queue reports downloaded bytes; Explorer controls the final destination copy.
+
+## Scanner CLI
+
+The original scanner is included as `FetchTree.Scanner.exe`:
 
 ```powershell
-.\FetchTree.exe https://firmware.ardupilot.org/Plane/ --depth 0 --json scan.json
-.\FetchTree.exe https://firmware.ardupilot.org/Plane/stable/ --depth 1 --json stable.json
-.\FetchTree.exe --help
+.\FetchTree.Scanner.exe https://firmware.ardupilot.org/Plane/ --depth 0 --json scan.json
+.\FetchTree.Scanner.exe --help
 ```
 
-Use the site's exact URL casing (`Plane`, not `plane`). Depth **0** scans the root listing and displays its immediate files and folders; depth **1** also scans those folders, and so on (maximum 100). Folders beyond the requested depth remain visible with `DepthLimit` status.
-
-Ctrl+C cancels requests and exports partial results when `--json` is specified. Default budgets: 1,000 listing requests, 100,000 discovered entries, 4 MB per page, 20 seconds per request. Override the first two with `--max-pages N` and `--max-entries N`. Scanning is sequential to limit load on hosting sites; concurrent file downloads are a later milestone.
-
-Exit codes: `0` finished within the requested depth, `1` invalid input or fatal error, `2` partial scan (errors or resource limits), `130` cancelled. Always inspect folder statuses; an unread folder is not an empty folder.
-
-## Supported listings and boundaries
-
-- Apache/nginx-style anchor links with trailing slashes for directories.
-- ArduPilot's table listings with folder icons, including directory links without trailing slashes.
-- Relative and absolute links, encoded names, and HTML entities.
-- Only direct children on the same scheme and host inside the selected root are traversed. Parent links, sort queries, fragments, external links, duplicate URLs, encoded separators, and control characters are excluded.
-- Redirects may only normalize the trailing slash of the current directory. Redirects to another folder, host, or scheme are reported as errors. Enter the final HTTPS URL if a site redirects HTTP to HTTPS.
-- HTML only; no JavaScript-rendered pages, authenticated sessions, arbitrary web crawling, or universal directory format detection. A generic HTML page may yield no entries. File size/date metadata is not inferred in this prototype.
-- JSON contains URLs, display names, relative paths, status/error fields, counters, and child entries. **Relative paths are discovery metadata, not validated Windows download paths.** The future downloader must handle reserved names, case collisions, long paths, and atomic writes before using them locally.
-
 ## Build and test
-
-From PowerShell at the repository root:
 
 ```powershell
 .\build.ps1
 .\test.ps1
-.\bin\FetchTree.exe --help
 ```
 
-Build uses the .NET Framework compiler supplied with Windows. No package restore is required. Tests cover URL boundaries, parsing, depth, partial failures, redirects, budgets, cancellation, and a real loopback HTTP server. An optional captured live listing can be checked using `test.ps1 -LiveHtml C:\path\listing.html`.
+Uses the Windows .NET Framework compiler without package restore. Tests cover discovery, path safety, recursive transfers, parallel downloads, cancellation, virtual-file descriptors and streams, and an actual Windows Shell drop target copying a mixed selection to an isolated test folder. GitHub Actions also checks a live HTTPS listing and uploads both executables as `FetchTree-windows`.
 
-GitHub Actions builds and tests on Windows, then uploads `FetchTree-windows` containing the executable and this README. Download it from the successful workflow run's Artifacts section.
-
-## Roadmap
-
-1. **Scanner prototype:** implemented, CLI and reusable model.
-2. **Desktop GUI:** URL bar, depth control, folder tree left, file list right, loading/error states, scan cancellation.
-3. **Download manager:** select files/folders, preserve structure, bounded concurrent transfers, queue progress, cancellation/retry, collision handling, and partial-file cleanup.
-4. **Windows integration:** drag remote files into Explorer using virtual file data objects; installer and signing.
-
-See `VALIDATION.md` for the initial build's verification results and limitations.
+Sources: `Scanner.cs` handles discovery, `Transfers.cs` prepares and downloads selections, `ShellDrag.cs` implements Windows virtual files, and `ExplorerWindow.cs` provides the desktop UI. See `VALIDATION.md` for verification scope.

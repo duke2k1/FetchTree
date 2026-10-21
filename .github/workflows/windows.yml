@@ -1,4 +1,4 @@
-name: Windows scanner
+name: Windows desktop
 on: [push, pull_request, workflow_dispatch]
 permissions:
   contents: read
@@ -13,7 +13,7 @@ jobs:
       - name: Live HTTPS smoke test
         shell: pwsh
         run: |
-          ./bin/FetchTree.exe https://firmware.ardupilot.org/Plane/ --depth 0 --json smoke.json
+          ./bin/FetchTree.Scanner.exe https://firmware.ardupilot.org/Plane/ --depth 0 --json smoke.json
           if ($LASTEXITCODE -ne 0) { throw 'Live HTTPS smoke test failed' }
           $scan = Get-Content smoke.json -Raw | ConvertFrom-Json
           if (-not ($scan.Root.Children | Where-Object { $_.Name -eq 'stable' -and $_.IsDirectory })) { throw 'Expected stable folder missing' }
@@ -22,6 +22,7 @@ jobs:
           name: FetchTree-windows
           path: |
             bin/FetchTree.exe
+            bin/FetchTree.Scanner.exe
             README.md
             VALIDATION.md
             smoke.json

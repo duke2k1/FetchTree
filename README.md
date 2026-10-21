@@ -1,19 +1,29 @@
 # FetchTree v0.3
 
+![FetchTree logo](assets/logo.png)
+
+FetchTree is a Windows desktop browser for remote HTTP/HTTPS directory listings. It presents remote folders in a familiar Explorer-style layout, then lets you select files or folders and copy their contents to the Windows desktop or another Explorer window.
+
+![FetchTree desktop preview](assets/preview.png)
+
+The application is developed by David Charnock.
+
 An Explorer-style Windows desktop app for HTTP/HTTPS directory listings.
 
 ## Run
 
-Extract the package and double-click **FetchTree.exe**. Requires Windows 10/11 and .NET Framework 4.8. No installation or extra packages are needed; the executable is unsigned.
+Extract the package and double-click **FetchTree.exe**. Requires Windows 10/11 and .NET Framework 4.8. No installation or extra packages are needed; the executable is unsigned. Windows Defender or SmartScreen may show an unsigned-app warning; use the copy from the release package you downloaded.
 
 1. Enter a directory URL such as `https://example.com/files/` and click **Connect**.
 2. Double-click folders or use the folder tree. Back, Up, Refresh, and Icon/Details views provide familiar navigation.
 3. Select files and folders together using **Ctrl-click**, **Shift-click**, or **Ctrl+A**.
-4. **Drag the selection to your desktop or a File Explorer folder.** Actual contents are copied, preserving nested and empty folders.
+4. **Drag the selection to your desktop or a File Explorer folder.** Actual contents are copied, preserving nested and empty folders. Keep FetchTree open while the Windows copy operation is running.
+
+When dragging outside FetchTree, the Windows copy dialog may appear. FetchTree returns to its own interface while the transfer continues, so you can keep browsing. The transfer queue shows remote download progress; Windows Explorer shows the final destination copy.
 
 The navy/cyan header includes the app logo and developer credit: Developed by David Charnock. File, Edit, View, and Help menus are at the top. Back and Up sit beside the directory path. The Windows executable has its own embedded icon.
 
-The queue shows file status and downloaded bytes. Choose 1–8 simultaneous downloads (default 3). Cancel stops scanning or transfers. Keep FetchTree open until the transfer finishes.
+The queue shows file status and downloaded bytes. Choose 1–8 simultaneous downloads (default 3). Cancel stops scanning or transfers. File, Edit, View, and Help menus are available at the top; Back and Up are beside the current directory path.
 
 ## Folder transfers
 
@@ -47,6 +57,6 @@ The original scanner is included as `FetchTree.Scanner.exe`:
 .\test.ps1
 ```
 
-Uses the Windows .NET Framework compiler without package restore. Tests cover discovery, path safety, recursive transfers, parallel downloads, cancellation, virtual-file descriptors and streams, and an actual Windows Shell drop target copying a mixed selection to an isolated test folder. GitHub Actions also checks a live HTTPS listing and uploads both executables as `FetchTree-windows`.
+Uses the Windows .NET Framework compiler without package restore. Tests cover discovery, path safety, recursive transfers, parallel downloads, cancellation, virtual-file descriptors and streams, asynchronous Explorer copy negotiation, and an actual Windows Shell drop target copying a mixed selection to an isolated test folder. GitHub Actions also checks a live HTTPS listing and uploads both executables as `FetchTree-windows`.
 
 Sources: `Scanner.cs` handles discovery, `Transfers.cs` prepares and downloads selections, `ShellDrag.cs` implements Windows virtual files, and `ExplorerWindow.cs` provides the desktop UI. See `VALIDATION.md` for verification scope.

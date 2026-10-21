@@ -40,23 +40,3 @@ Windows-incompatible names, case collisions, and relative transfer paths over 22
 Supports Apache/nginx-style directory links and HTML folder-icon tables, including folder links without trailing slashes. Use the exact URL casing expected by the server. Parent, external, duplicate, query, and fragment links are excluded. Listing redirects may only normalize a trailing slash; file redirects are rejected. Enter the final directory URL.
 
 JavaScript-generated listings, authentication, automatic retries, resume, signing, and an installer are not included. Inspect the destination after a cancelled or failed drop: Explorer may have copied only part of a selection. The queue reports downloaded bytes; Explorer controls the final destination copy.
-
-## Scanner CLI
-
-The original scanner is included as `FetchTree.Scanner.exe`:
-
-```powershell
-.\FetchTree.Scanner.exe https://example.com/files/ --depth 0 --json scan.json
-.\FetchTree.Scanner.exe --help
-```
-
-## Build and test
-
-```powershell
-.\build.ps1
-.\test.ps1
-```
-
-Uses the Windows .NET Framework compiler without package restore. Tests cover discovery, path safety, recursive transfers, parallel downloads, cancellation, virtual-file descriptors and streams, asynchronous Explorer copy negotiation, and an actual Windows Shell drop target copying a mixed selection to an isolated test folder. GitHub Actions also checks a live HTTPS listing and uploads both executables as `FetchTree-windows`.
-
-Sources: `Scanner.cs` handles discovery, `Transfers.cs` prepares and downloads selections, `ShellDrag.cs` implements Windows virtual files, and `ExplorerWindow.cs` provides the desktop UI. See `VALIDATION.md` for verification scope.

@@ -65,7 +65,7 @@ namespace FetchTree
             navigation.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100)); navigation.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 84)); navigation.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 90));
             var back = MakeButton("←"); back.AccessibleName = "Back"; back.Click += async (s, e) => { if (history.Count > 0 && !scanning) await Navigate(history.Pop(), false); };
             var up = MakeButton("↑"); up.AccessibleName = "Up one folder"; up.Click += async (s, e) => { if (current != null && current.Parent != null) await Navigate(current.Parent, true); };
-            address.Dock = DockStyle.Fill; address.Margin = new Padding(6, 7, 6, 3); address.Text = initialUrl ?? "https://firmware.ardupilot.org/Plane/"; address.AccessibleName = "Directory URL";
+            address.Dock = DockStyle.Fill; address.Margin = new Padding(6, 7, 6, 3); address.Text = initialUrl ?? ""; address.AccessibleName = "Directory URL";
             address.KeyDown += async (s, e) => { if (e.KeyCode == Keys.Enter) { e.SuppressKeyPress = true; await ScanRoot(); } };
             ConfigureButton(scan, "Scan"); scan.Click += async (s, e) => await ScanRoot();
             var refresh = MakeButton("Refresh"); refresh.Click += async (s, e) => { if (current != null && !scanning) { ((Entry)current.Tag).Status = "NotScanned"; await Navigate(current, false); } };

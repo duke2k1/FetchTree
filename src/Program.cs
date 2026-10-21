@@ -29,9 +29,9 @@ namespace FetchTree
                 if (interactive)
                 {
                     Console.WriteLine("FetchTree - directory scanner prototype\n");
-                    Console.Write("Directory URL [https://firmware.ardupilot.org/Plane/]: ");
+                    Console.Write("Directory URL: ");
                     url = Console.ReadLine();
-                    if (string.IsNullOrWhiteSpace(url)) url = "https://firmware.ardupilot.org/Plane/";
+                    if (string.IsNullOrWhiteSpace(url)) throw new ArgumentException("Enter a directory URL to scan.");
                     Console.Write("Scan depth [1] (0 = root listing only): ");
                     string value = Console.ReadLine();
                     if (!string.IsNullOrWhiteSpace(value)) depth = int.Parse(value);

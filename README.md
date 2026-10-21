@@ -1,3 +1,8 @@
+## Download
+
+**[Download the Latest Version of FetchTree](https://github.com/duke2k1/FetchTree/releases/latest)**
+
+Download the latest release for Windows from the GitHub Releases page.
 # FetchTree v0.3
 
 ![FetchTree logo](assets/logo.png)

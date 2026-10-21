@@ -64,6 +64,15 @@ internal static class DesktopTests
             using (var batch = new TransferBatch(plan, client, 2, CancellationToken.None, (p, s, b, t) => { }))
             {
                 var data = new RemoteDataObject(() => batch);
+                bool asyncMode; data.GetAsyncMode(out asyncMode);
+                Check(!asyncMode, "synchronous mode is the default for non-Explorer consumers");
+                var asyncData = new RemoteDataObject(() => batch);
+                asyncData.SetAsyncMode(true); asyncData.GetAsyncMode(out asyncMode);
+                Check(asyncMode, "background copy capability advertised");
+                asyncData.StartOperation(null); bool active; asyncData.InOperation(out active);
+                Check(active && !asyncData.OperationFinished.IsCompleted, "background copy lifetime stays active after drag returns");
+                asyncData.EndOperation(0, null, 1); asyncData.OperationFinished.Wait(); asyncData.InOperation(out active);
+                Check(!active && asyncData.OperationFinished.Result == 0, "background copy finishes only on Explorer completion");
                 Check(Marshal.SizeOf(typeof(FileDescriptor)) == 592, "Windows FILEDESCRIPTORW binary layout");
                 var descriptor = RemoteDataObject.Format(RemoteDataObject.DescriptorFormat, TYMED.TYMED_HGLOBAL, -1);
                 STGMEDIUM medium; data.GetData(ref descriptor, out medium);

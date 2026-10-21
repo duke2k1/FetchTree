@@ -1,4 +1,4 @@
-# FetchTree v0.2
+# FetchTree v0.3
 
 An Explorer-style Windows desktop app for HTTP/HTTPS directory listings.
 
@@ -6,11 +6,12 @@ An Explorer-style Windows desktop app for HTTP/HTTPS directory listings.
 
 Extract the package and double-click **FetchTree.exe**. Requires Windows 10/11 and .NET Framework 4.8. No installation or extra packages are needed; the executable is unsigned.
 
-1. Enter a directory URL such as `https://example.com/files/` and click **Scan**.
+1. Enter a directory URL such as `https://example.com/files/` and click **Connect**.
 2. Double-click folders or use the folder tree. Back, Up, Refresh, and Icon/Details views provide familiar navigation.
 3. Select files and folders together using **Ctrl-click**, **Shift-click**, or **Ctrl+A**.
 4. **Drag the selection to your desktop or a File Explorer folder.** Actual contents are copied, preserving nested and empty folders.
-5. Alternatively use **Download to…**, which creates a new dated FetchTree folder inside the chosen destination to avoid overwrites.
+
+The navy/cyan header includes the app logo and developer credit: Developed by David Charnock. File, Edit, View, and Help menus are at the top. Back and Up sit beside the directory path. The Windows executable has its own embedded icon.
 
 The queue shows file status and downloaded bytes. Choose 1–8 simultaneous downloads (default 3). Cancel stops scanning or transfers. Keep FetchTree open until the transfer finishes.
 
@@ -18,7 +19,7 @@ The queue shows file status and downloaded bytes. Choose 1–8 simultaneous down
 
 Depth 0 reads the root listing; opening a folder loads it on demand. Higher depths preload more levels. Transferring a folder always resolves its full subtree independently of browsing depth. An incomplete scan fails rather than silently omitting files.
 
-Folders are resolved when a drop target requests descriptors. Large selections may take time to prepare. File downloads begin when the target requests contents, not when items are selected. A target may request contents before mouse release; Explorer normally does so at the drop. The browser remains responsive during the transfer.
+Folders are resolved when a drop target requests descriptors. Large selections may take time to prepare. File downloads begin when the target requests contents, not when items are selected. A target may request contents before mouse release; Explorer normally does so at the drop. Explorer negotiates asynchronous copying. Its progress window can remain visible while FetchTree returns to browsing; keep FetchTree open until copying finishes. A second transfer waits for the current transfer to finish.
 
 Limits: 2,000 listing requests per selected folder, depth 100, and 10,000 total transfer entries. Browsing allows 1,000 pages and 10,000 entries per scan. Listing requests have a 20-second timeout and a 4 MB response limit. Downloads have a 60-second inactivity timeout.
 

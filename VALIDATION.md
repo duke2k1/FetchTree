@@ -1,11 +1,11 @@
-# Desktop v0.2 verification
+# Desktop v0.3 verification
 
-- Both Windows executables rebuilt successfully.
-- 17 scanner checks passed, including actual loopback HTTP transport.
-- 24 desktop/transfer checks passed: Windows names and collisions, recursive folder resolution, empty directories, no file downloads during descriptor preparation, bounded concurrency, byte-accurate indexed streams, no overwrite, failure cleanup, and cancellation.
-- Actual Windows Shell IDropTarget integration passed: copied two files and a folder together, preserving nested content and an empty subfolder, into an isolated test folder.
-- The application's own rendering was inspected; a narrow folder pane was corrected.
-- Physical mouse dragging to the desktop was not completed during automated testing: desktop capture timed out and the user stopped computer-use testing. Native Shell drop behavior is covered by the integration test above.
-- Local Windows Schannel HTTPS is restricted in the Codex sandbox. Certificate validation remains enabled; Windows CI separately checks a live HTTPS directory listing.
+- Scanner, transfer, and native Windows Shell integration checks pass.
+- The drag loop now runs on the source window input thread, retaining the initiating mouse gesture.
+- Explorer asynchronous copy negotiation is tested: Drop returns before file extraction finishes, and the message pump continues while the transfer completes.
+- Transfer lifetime remains active through EndOperation, with cache cleanup deferred until all download writers stop.
+- Mixed file/folder selections preserve nested and empty folders. Filename safety, bounded concurrency, cancellation, partial-file cleanup, and indexed stream bytes are tested.
+- The branded application render was visually inspected. Menu, directory navigation, logo, executable icon, and developer credit are included; Download to controls are removed.
+- Live desktop screenshot capture still times out in this environment, so the physical mouse gesture to the desktop could not be independently verified here. Native Shell copying and async completion are exercised through the real Windows drop target.
 
-Known limits: no automatic retry/resume, file redirects rejected, Windows-incompatible or overly long paths fail explicitly. External drop targets control final writes and may leave partial destinations after cancellation. Temporary staging may survive a crash or an external consumer holding a stream open.
+Known limits: one transfer selection at a time; no automatic retry/resume; file redirects rejected; Windows-incompatible and overly long paths fail explicitly. Explorer may leave partial destinations after cancellation. Keep the app open while copying. The package is unsigned.

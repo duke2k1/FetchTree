@@ -4,9 +4,24 @@ using System.IO;
 using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.ComTypes;
 using System.Threading;
+using System.Threading.Tasks;
+using System.Windows.Forms;
 
 namespace FetchTree
 {
+    public static class ShellTransferWait
+    {
+        // Shell GetData is synchronous. Keep paint/progress/cancellation messages moving
+        // while the asynchronous network work completes. The window guards against
+        // starting another scan, navigation, or transfer during this nested message loop.
+        public static T Complete<T>(Task<T> operation)
+        {
+            if (Application.MessageLoop)
+                while (!operation.IsCompleted) { Application.DoEvents(); Thread.Sleep(15); }
+            return operation.GetAwaiter().GetResult();
+        }
+    }
+
     [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
     public struct FileDescriptor
     {
@@ -51,10 +66,20 @@ namespace FetchTree
         public int GiveFeedback(uint effect) { return 0x40102; }
     }
 
+    [ComVisible(true), Guid("3D8B0590-F691-11D2-8EA9-006097DF5BD4"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+    public interface IDataObjectAsyncCapability
+    {
+        void SetAsyncMode([MarshalAs(UnmanagedType.Bool)] bool enabled);
+        void GetAsyncMode([MarshalAs(UnmanagedType.Bool)] out bool enabled);
+        void StartOperation(IBindCtx reserved);
+        void InOperation([MarshalAs(UnmanagedType.Bool)] out bool active);
+        void EndOperation(int result, IBindCtx reserved, uint effect);
+    }
+
     // Native virtual files: Explorer chooses the destination and performs collision handling.
     // Contents are requested by index, only when a drop target consumes the files.
     [ComVisible(true), ClassInterface(ClassInterfaceType.None)]
-    public sealed class RemoteDataObject : System.Runtime.InteropServices.ComTypes.IDataObject
+    public sealed class RemoteDataObject : System.Runtime.InteropServices.ComTypes.IDataObject, IDataObjectAsyncCapability
     {
         public static readonly short DescriptorFormat = unchecked((short)ShellNative.RegisterClipboardFormat("FileGroupDescriptorW"));
         public static readonly short ContentsFormat = unchecked((short)ShellNative.RegisterClipboardFormat("FileContents"));
@@ -64,6 +89,21 @@ namespace FetchTree
         public bool HasBatch { get { return batch.IsValueCreated; } }
         public TransferBatch Batch { get { return batch.Value; } }
         public string LastError { get; private set; }
+        private bool asyncMode;
+        private volatile bool asyncStarted, asyncActive;
+        private readonly TaskCompletionSource<int> finished = new TaskCompletionSource<int>();
+        public bool AsyncStarted { get { return asyncStarted; } }
+        public Task<int> OperationFinished { get { return finished.Task; } }
+        public void SetAsyncMode(bool enabled) { asyncMode = enabled; }
+        public void GetAsyncMode(out bool enabled) { enabled = asyncMode; }
+        public void StartOperation(IBindCtx reserved) { asyncStarted = true; asyncActive = true; }
+        public void InOperation(out bool active) { active = asyncActive; }
+        public void EndOperation(int result, IBindCtx reserved, uint effect)
+        {
+            asyncActive = false;
+            // Don't run UI continuation/cleanup inside Explorer's EndOperation callback.
+            Task.Run(() => finished.TrySetResult(result));
+        }
 
         public static FORMATETC Format(short id, TYMED medium, int index)
         {
@@ -84,8 +124,9 @@ namespace FetchTree
 
         public void GetData(ref FORMATETC format, out STGMEDIUM medium)
         {
+            bool supported = QueryGetData(ref format) == 0;
             try { GetDataCore(ref format, out medium); }
-            catch (Exception ex) { LastError = ex.GetBaseException().Message; throw; }
+            catch (Exception ex) { if (supported) LastError = ex.GetBaseException().Message; throw; }
         }
 
         private void GetDataCore(ref FORMATETC format, out STGMEDIUM medium)
@@ -111,7 +152,7 @@ namespace FetchTree
             }
             if (format.lindex < 0 || format.lindex >= current.Items.Count || current.Items[format.lindex].Directory)
                 Marshal.ThrowExceptionForHR(unchecked((int)0x80040068));
-            string file = current.GetFileAsync(current.Items[format.lindex]).GetAwaiter().GetResult();
+            string file = ShellTransferWait.Complete(current.GetFileAsync(current.Items[format.lindex]));
             IStream stream;
             ShellNative.SHCreateStreamOnFileEx(file, 0x20, 0, false, null, out stream);
             medium = new STGMEDIUM { tymed = TYMED.TYMED_ISTREAM, unionmember = Marshal.GetComInterfaceForObject(stream, typeof(IStream)), pUnkForRelease = null };

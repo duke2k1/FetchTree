@@ -46,6 +46,7 @@ internal static class ShellDropTests
                 using (var batch = new TransferBatch(plan, client, 3, CancellationToken.None, (p, s, b, t) => Console.WriteLine(p + ": " + s)))
                 {
                     var data = new RemoteDataObject(() => batch);
+                    data.SetAsyncMode(true);
                     Guid shellId = typeof(IShellItem).GUID;
                     IShellItem item; SHCreateItemFromParsingName(destination, IntPtr.Zero, ref shellId, out item);
                     Guid handlerId = new Guid("3981e225-f559-11d3-8e3a-00c04f6837d5"); Guid dropId = typeof(IDropTarget).GUID;
@@ -55,6 +56,17 @@ internal static class ShellDropTests
                     if (effect != 1) throw new Exception("Explorer refused Copy: " + effect);
                     effect = 1; target.Drop(data, 0, new PointL(), ref effect);
                     Console.WriteLine("Drop effect: " + effect);
+                    if (!data.AsyncStarted) throw new Exception("Explorer did not negotiate asynchronous copying.");
+                    int ticks = 0;
+                    var until = DateTime.UtcNow.AddSeconds(30);
+                    while (!data.OperationFinished.IsCompleted && DateTime.UtcNow < until)
+                    {
+                        System.Windows.Forms.Application.DoEvents();
+                        ticks++; Thread.Sleep(10);
+                    }
+                    if (!data.OperationFinished.IsCompleted) throw new Exception("Async Shell drop timed out.");
+                    if (data.OperationFinished.Result < 0) Marshal.ThrowExceptionForHR(data.OperationFinished.Result);
+                    Console.WriteLine("PASS: Explorer returned from Drop before copy completion; UI message pump continued for " + ticks + " ticks.");
                     if (!File.Exists(Path.Combine(destination, "hello.txt")) || !File.Exists(Path.Combine(destination, "second.txt")) ||
                         !File.Exists(Path.Combine(destination, "Folder", "a.txt")) || !Directory.Exists(Path.Combine(destination, "Folder", "Nested")))
                         throw new Exception("Explorer did not preserve all selected files and folders.");

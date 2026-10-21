@@ -6,7 +6,7 @@ FetchTree is a Windows desktop browser for remote HTTP/HTTPS directory listings.
 
 ![FetchTree desktop preview](assets/preview.png)
 
-The application is developed by David Charnock.
+Developed by David Charnock.
 
 An Explorer-style Windows desktop app for HTTP/HTTPS directory listings.
 

@@ -6,7 +6,7 @@ An Explorer-style Windows desktop app for HTTP/HTTPS directory listings.
 
 Extract the package and double-click **FetchTree.exe**. Requires Windows 10/11 and .NET Framework 4.8. No installation or extra packages are needed; the executable is unsigned.
 
-1. Enter a directory URL such as `https://firmware.ardupilot.org/Plane/` and click **Scan**.
+1. Enter a directory URL such as `https://example.com/files/` and click **Scan**.
 2. Double-click folders or use the folder tree. Back, Up, Refresh, and Icon/Details views provide familiar navigation.
 3. Select files and folders together using **Ctrl-click**, **Shift-click**, or **Ctrl+A**.
 4. **Drag the selection to your desktop or a File Explorer folder.** Actual contents are copied, preserving nested and empty folders.
@@ -26,7 +26,7 @@ Windows-incompatible names, case collisions, and relative transfer paths over 22
 
 ## Supported sites and limitations
 
-Supports Apache/nginx-style directory links and ArduPilot folder-icon tables, including folder links without trailing slashes. Use exact URL casing (`Plane`, not `plane`). Parent, external, duplicate, query, and fragment links are excluded. Listing redirects may only normalize a trailing slash; file redirects are rejected. Enter the final directory URL.
+Supports Apache/nginx-style directory links and HTML folder-icon tables, including folder links without trailing slashes. Use the exact URL casing expected by the server. Parent, external, duplicate, query, and fragment links are excluded. Listing redirects may only normalize a trailing slash; file redirects are rejected. Enter the final directory URL.
 
 JavaScript-generated listings, authentication, automatic retries, resume, signing, and an installer are not included. Inspect the destination after a cancelled or failed drop: Explorer may have copied only part of a selection. The queue reports downloaded bytes; Explorer controls the final destination copy.
 
@@ -35,7 +35,7 @@ JavaScript-generated listings, authentication, automatic retries, resume, signin
 The original scanner is included as `FetchTree.Scanner.exe`:
 
 ```powershell
-.\FetchTree.Scanner.exe https://firmware.ardupilot.org/Plane/ --depth 0 --json scan.json
+.\FetchTree.Scanner.exe https://example.com/files/ --depth 0 --json scan.json
 .\FetchTree.Scanner.exe --help
 ```
 
